@@ -103,7 +103,7 @@ function processJanusEvent(e) {
         // Prepare for shipping!
         preHep(message);
       } else {
-        // Send as Log type 
+        // Send as Log type
         var payload = e.timestamp + ': ';
         payload += JSON.stringify(e.event);
 

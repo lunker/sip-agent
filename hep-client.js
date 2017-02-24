@@ -78,7 +78,9 @@ var sendHEP3 = function(msg,rcinfo){
     try {
       // if (debug) console.log('Sending HEP3 Packet to '+ hep_server + ':' + hep_port + '...');
       if (! typeof msg === 'string' || ! msg instanceof String) msg = JSON.stringify(msg);
+      console.log('before :: ' + msg.length);
       var hep_message = HEPjs.encapsulate(msg.toString(),rcinfo);
+      console.log('after :: ' + hep_message.length);
       stats.parsed++;
       if (hep_message && hep_message.length) {
 
@@ -93,7 +95,6 @@ var sendHEP3 = function(msg,rcinfo){
         }
 
         socket.send(hep_message, 0, hep_message.length, hep_port, hep_server, function(err) {
-          console.log(err.message);
           if (debug) console.log('Sending HEP3 ' + hep_message.length + 'Packet to '+ hep_server + ':' + hep_port + '...');
           stats.hepsent++;
         });

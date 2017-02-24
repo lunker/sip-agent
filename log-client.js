@@ -33,8 +33,8 @@ module.exports = {
 
 function watchFile(logSet){
   var path = logSet.path;
-  // var currSize = 0;
-  var currSize = (fs.statSync(path).size);
+  var currSize = (fs.statSync(path).size)*0.9;
+  // var currSize = (fs.statSync(path).size);
 
   console.log("["+new Date+"]"+ " Watching '"+path+"' ("+currSize+")");
 
@@ -98,32 +98,34 @@ function readChanges(logSet, patternList, from, to){
     if(splitMsg != undefined && splitMsg != null){
       // console.log('matched array :: ' + splitMsg.length);
       console.log('split success');
+      var counts = splitMsg.length;
+      var sipMsg = null;
+      var currentDate = null;
+      var prefixPattern = new RegExp('\\[SENT\\]:|\\[RECEIVED\\]:','g');
+      var callIdPattern = new RegExp('Call-ID:.*','g');
+      var callId = null;
+
+      for(var index=0; index<counts; index++){
+        // sipMsg = splitMsg[index];
+        // console.log("Before Erase prefix result : " + sipMsg);
+        sipMsg = splitMsg[index].split(prefixPattern)[1];
+
+        callId = sipMsg.match(callIdPattern);
+        callId = callId[0].split('Call-ID:')[1];
+
+
+        // console.log("After Erase prefix result : " + sipMsg[1]);
+        var message = prepareMessage(tag, sipMsg, callId, host, new Date().getTime());
+        preHep(message);
+      }
     }
     else{
       console.log('split fail');
     }
 
-    var counts = splitMsg.length;
-    var sipMsg = null;
-    var currentDate = null;
-    var prefixPattern = new RegExp('\\[SENT\\]:|\\[RECEIVED\\]:','g');
-    var callIdPattern = new RegExp('Call-ID:','g');
-    var callId = null;
-
-    for(var index=0; index<counts; index++){
-      sipMsg = splitMsg[index];
-      // console.log("Before Erase prefix result : " + sipMsg);
-      sipMsg = splitMsg[index].split(prefixPattern)[1];
-      // callId = sipMsg.match();
-
-      // console.log("After Erase prefix result : " + sipMsg[1]);
-      var message = prepareMessage(tag, sipMsg, '12', host, new Date().getTime());
-      preHep(message);
-    }
-
-    //===================================================
-    //===================================================
-    //===================================================
+    //======================================================================================================
+    //======================================================================================================
+    //======================================================================================================
 
 /*
 1차 성공본 :: using String.split
@@ -190,19 +192,17 @@ function prepareMessage(tag, data, cid, host, datenow) {
     rcinfo: {
       type: 'HEP',
       version: 3,
-      payload_type: 100,
-      time_sec: t_sec,
-      time_usec: (datenow - (t_sec*1000))*1000,
+      payload_type: 'SIP',
       ip_family: 2,
-      protocol: 6,
-      proto_type: 100,
+      protocol: 17,
+      proto_type: 1,
       srcIp: '127.0.0.1',
       dstIp: '127.0.0.1',
       srcPort: 0,
       dstPort: 0,
       captureId: hep_id,
       capturePass: hep_pass,
-      correlation_id: '12'
+      correlation_id: cid
     },
     payload: data
   };
