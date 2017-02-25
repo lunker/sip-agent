@@ -33,7 +33,7 @@ module.exports = {
 
 function watchFile(logSet){
   var path = logSet.path;
-  var currSize = (fs.statSync(path).size)*0.9;
+  var currSize = 0;
   // var currSize = (fs.statSync(path).size);
 
   console.log("["+new Date+"]"+ " Watching '"+path+"' ("+currSize+")");
@@ -96,8 +96,6 @@ function readChanges(logSet, patternList, from, to){
     var splitMsg = raw.match(pattern);
 
     if(splitMsg != undefined && splitMsg != null){
-      // console.log('matched array :: ' + splitMsg.length);
-      console.log('split success');
       var counts = splitMsg.length;
       var sipMsg = null;
       var currentDate = null;
@@ -111,10 +109,18 @@ function readChanges(logSet, patternList, from, to){
         sipMsg = splitMsg[index].split(prefixPattern)[1];
 
         callId = sipMsg.match(callIdPattern);
-        callId = callId[0].split('Call-ID:')[1];
+        if(callId != undefined && callId != null){
+          if(callId.length != 0){
+            callId = callId[0].split('Call-ID:')[1];
+          }
+          else{
+            console.log('no call-id');
+          }
+        }
+        else{
+          console.log('no call-id');
+        }
 
-
-        // console.log("After Erase prefix result : " + sipMsg[1]);
         var message = prepareMessage(tag, sipMsg, callId, host, new Date().getTime());
         preHep(message);
       }
