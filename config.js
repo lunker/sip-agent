@@ -10,7 +10,7 @@ var config = {
     HEP_ID: 2232,
     logs: [
       {
-        tag : 'opus_decoder',
+        tag : 'lb_parser',
         host : '127.0.0.1',
         pattern: '.*\[(SENT|RECEIVED)\]:\n',
         path : '/Users/voiceloco/Downloads/load-balancer.log.1'
