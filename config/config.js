@@ -2,7 +2,8 @@ var config = {
   hep_config: {
     debug: true,
     HEP_SERVER: '58.229.204.201',
-    HEP_PORT: 10852
+    HEP_PORT: 10852,
+    HEP_PROTO:'TCP'
   },
   logs_config: {
     debug: true,

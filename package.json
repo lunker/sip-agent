@@ -12,9 +12,9 @@
     "unsafe-perm":true
   },
   "scripts": {
-    "start": "nodejs hepipe.js",
-    "forever": "forever start -o ./log/hepipe.log -e ./log/error.log -a --minUptime 1000 --spinSleepTime 3000 ./hepipe.js",
-    "debug": "forever -l ./log/hepipe.log -o ./log/hepipe.log -e ./log/error.log --minUptime 1000 --spinSleepTime 3000 ./hepipe.js",
+    "start": "nodejs app.js",
+    "forever": "forever start -o ./log/hepipe.log -e ./log/error.log -a --minUptime 1000 --spinSleepTime 3000 ./app.js",
+    "debug": "forever -l ./log/hepipe.log -o ./log/hepipe.log -e ./log/error.log --minUptime 1000 --spinSleepTime 3000 ./app.js",
     "stop": "forever stopall",
     "preinstall": "npm install -g forever"
   }
