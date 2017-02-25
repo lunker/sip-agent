@@ -13,7 +13,7 @@ var config = {
         tag : 'lb_parser',
         host : '127.0.0.1',
         pattern: '.*\[(SENT|RECEIVED)\]:\n',
-        path : '/Users/voiceloco/Downloads/load-balancer.log.1'
+        path : '/Users/voiceloco/Downloads/test-log.log'
       }
     ]
   }

@@ -19,8 +19,8 @@ var hep_pass;
 
 function watchFile(logSet){
   var path = logSet.path;
-  // var currSize = 0;
-  var currSize = (fs.statSync(path).size);
+  var currSize = 0;
+  // var currSize = (fs.statSync(path).size);
 
   console.log("["+new Date+"]"+ " Watching '"+path+"' ("+currSize+")");
 
@@ -73,25 +73,34 @@ function readChanges(logSet, patternList, from, to){
     var lines, i, j;
 
     var raw = last+chunk;
-    //
+
     var pattern = new RegExp('(\\[RECEIVED\\]:|\\[SENT\\]:)\n(.*\r\n)*','g');
+    var newSipMessagePattern = new RegExp('(\\[RECEIVED\\]|\\[SENT\\])(\\[(\d{0,3}.)*\\])\n(.*\r\n)*','g');
 
-    var splitMsg = raw.match(pattern);
+    // var sipMsgChunks = raw.match(pattern);
+    var sipMsgChunks = raw.match(newSipMessagePattern);
 
-    if(splitMsg != undefined && splitMsg != null){
-      var counts = splitMsg.length;
+    if(sipMsgChunks != undefined && sipMsgChunks != null){
+
+      // for(var idx=0; idx < sipMsgChunks.length; idx++){console.log('test parsed result ::\n' + sipMsgChunks[idx]);}
+
+      var counts = sipMsgChunks.length;
       var sipMsg = null;
-      var currentDate = null;
-      var sipMessagePattern = new RegExp('\\[SENT\\]:|\\[RECEIVED\\]:','g');
-      var srcInfoPattern = new RegExp('\\[SENT\\]:|\\[RECEIVED\\]:','g');
-      var destInfoPattern = new RegExp('\\[SENT\\]:|\\[RECEIVED\\]:','g');
+
+      var sipMessagePattern = new RegExp('\\[SENT\\]|\\[RECEIVED\\]','g');
+      var terminalInfoPattern = new RegExp('\\[([0-9]{1,3}\\.?){4,4}:[0-9]{1,5}\\]','g');
       var callIdPattern = new RegExp('Call-ID:.*','g');
       var callId = null;
+      var srcIp = '';
+      var srcPort = 0;
+      var dstIp = '';
+      var dstPort = 0;
 
+      // do parsing each SIP Message
       for(var index=0; index<counts; index++){
-        // sipMsg = splitMsg[index];
-        // console.log("Before Erase prefix result : " + sipMsg);
-        sipMsg = splitMsg[index].split(prefixPattern)[1];
+
+        sipMsg = sipMsgChunks[index].split(sipMessagePattern)[1];
+        // console.log('test sip msg :: \n' + sipMsg);
 
         callId = sipMsg.match(callIdPattern);
         if(callId != undefined && callId != null){
@@ -106,9 +115,36 @@ function readChanges(logSet, patternList, from, to){
           console.log('no call-id');
         }
 
-        var message = prepareMessage(tag, sipMsg, callId, host, new Date().getTime());
-        preHep(message);
-      }
+
+
+        var terminalInfos = sipMsg.match(terminalInfoPattern);
+        if(terminalInfos != undefined && terminalInfos.length != null){
+
+          // debug terminal info
+          // for(var idx=0; idx<terminalInfos.length; idx++){console.log('terminal infos :: ' + terminalInfos[idx]);}
+          var srcInfo = terminalInfos[0].split(":");
+          var dstInfo = terminalInfos[1].split(":");
+
+          srcIp = srcInfo[0];
+          srcPort = srcInfo[1];
+          dstIp = dstInfo[0];
+          dstPort = dstInfo[1];
+
+          var logSuffix = new RegExp('\\]\n','g');
+          sipMsg = sipMsg.split(logSuffix)[1];
+
+          // console.log('test sip msg :: \n' + sipMsg);
+          // complete parse raw sip message
+          // sipMsg :: raw sip message
+          return ; // test for break;
+
+          var message = prepareMessage(tag, sipMsg, srcIp, srcPort, dstIp, dstPort, callId, new Date().getTime());
+          preHep(message);
+        }
+        else{
+          console.log('terminal info parse error :: ' + terminalInfos);
+        }
+      }// end loop :: handle Raw SIP message
     }
     else{
       console.log('split fail');
@@ -116,7 +152,7 @@ function readChanges(logSet, patternList, from, to){
   });
 }
 
-function prepareMessage(tag, data, cid, host, datenow) {
+function prepareMessage(tag, data, srcIp, srcPort, dstIp, dstPort, cid, datenow) {
   if (debug) console.log('CID: ' + cid + ' DATA:' + data);
 
   var t_sec = Math.floor(datenow / 1000);
@@ -129,12 +165,14 @@ function prepareMessage(tag, data, cid, host, datenow) {
       ip_family: 2,
       protocol: 17,
       proto_type: 1,
-      srcIp: '127.0.0.1',
-      dstIp: '127.0.0.1',
-      srcPort: 0,
-      dstPort: 0,
+      srcIp: srcIp,
+
+      dstIp: dstIp,
+      srcPort: srcPort,
+      dstPort: dstPort,
       captureId: hep_id,
       capturePass: hep_pass,
+
       correlation_id: cid
     },
     payload: data
